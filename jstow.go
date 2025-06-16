@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 )
 
@@ -11,15 +13,25 @@ import (
 // outside this package
 type JstowBase[T any] struct {
 	Path string
-	Body T
+	Body map[string]T
 }
 
 func Jstow[T any](path string) *JstowBase[T] {
 	// the underscore is for the error
 	// no error handling yet, add later
-	// var payload, _ = loadJson[T](path)
+	var payload, err = loadJson[T](path)
+	if err != nil {
+		file, err := os.Create(path)
+		if err != nil {
+			fmt.Println("Unable to create file!")
+		}
 
-	return &JstowBase[T]{Path: path}
+		file.WriteString("{}")
+
+		defer file.Close()
+	}
+
+	return &JstowBase[T]{Path: path, Body: payload}
 }
 
 // this function is simply for elegantly retuning every value there
@@ -44,6 +56,30 @@ func (j *JstowBase[T]) Insert(data T) error {
 func (j *JstowBase[T]) Update() error {
 
 	return nil
+}
+
+func (j *JstowBase[T]) Search(fieldName string, targetValue string) ([]T, error) {
+	var response []T
+	var jsonData, err = loadJson[T](j.Path)
+
+	if err != nil {
+		return response, err
+	}
+
+	for _, row := range jsonData {
+		var refl = reflect.ValueOf(row)
+		if refl.Kind() == reflect.Struct {
+			var field = refl.FieldByName(fieldName)
+			if field.IsValid() {
+				var value = field.Interface()
+				if fmt.Sprint(value) == fmt.Sprint(targetValue) {
+					response = append(response, row)
+				}
+			}
+		}
+	}
+
+	return response, nil
 }
 
 // ++++++++++++++ local functions +++++++++++++++++
@@ -79,9 +115,15 @@ func insertJson[T any](path string, data T) error {
 		keys = append(keys, key)
 	}
 
-	var currentKey, err2 = strconv.Atoi(keys[len(keys)-1])
-	if err2 != nil {
-		return errors.New("Invalid format!")
+	var currentKey int
+	var err2 error
+	if len(keys) > 0 {
+		currentKey, err2 = strconv.Atoi(keys[len(keys)-1])
+		if err2 != nil {
+			return errors.New("Invalid format!")
+		}
+	} else {
+		currentKey = 0
 	}
 
 	currentData[strconv.Itoa(currentKey+1)] = data
@@ -113,4 +155,13 @@ func writeToJson[T any](path string, data T) error {
 
 func updateJson(path string) error {
 	return nil
+}
+
+func searchKey[T any](path string, table map[string]T, key string) T {
+	var res T
+	for _, row := range table {
+		return row
+	}
+
+	return res
 }
