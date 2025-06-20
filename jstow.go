@@ -53,33 +53,31 @@ func (j *JstowBase[T]) Insert(data T) error {
 	return nil
 }
 
-func (j *JstowBase[T]) Update() error {
-
+func (j *JstowBase[T]) Update(fieldName string, targetValue string, newData T) error {
+	var err = updateData(j.Path, fieldName, targetValue, newData)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (j *JstowBase[T]) Search(fieldName string, targetValue string) ([]T, error) {
-	var response []T
-	var jsonData, err = loadJson[T](j.Path)
+	var response, _, err = searchData[T](j.Path, fieldName, targetValue)
 
 	if err != nil {
 		return response, err
 	}
 
-	for _, row := range jsonData {
-		var refl = reflect.ValueOf(row)
-		if refl.Kind() == reflect.Struct {
-			var field = refl.FieldByName(fieldName)
-			if field.IsValid() {
-				var value = field.Interface()
-				if fmt.Sprint(value) == fmt.Sprint(targetValue) {
-					response = append(response, row)
-				}
-			}
-		}
+	return response, nil
+}
+
+func (j *JstowBase[T]) Delete(fieldName string, targetValue string) error {
+	var err = deleteRow[T](j.Path, fieldName, targetValue)
+	if err != nil {
+		return err
 	}
 
-	return response, nil
+	return nil
 }
 
 // ++++++++++++++ local functions +++++++++++++++++
@@ -153,15 +151,72 @@ func writeToJson[T any](path string, data T) error {
 	return nil
 }
 
-func updateJson(path string) error {
+func updateData[T any](path string, fieldName string, targetValue string, newData T) error {
+	_, keys, err := searchData[T](path, fieldName, targetValue)
+	if err != nil {
+		return err
+	}
+
+	var dbData, err2 = loadJson[T](path)
+	if err2 != nil {
+		return err2
+	}
+
+	for _, key := range keys {
+		dbData[key] = newData
+	}
+
+	var err3 = writeToJson(path, dbData)
+	if err3 != nil {
+		return err3
+	}
+
 	return nil
 }
 
-func searchKey[T any](path string, table map[string]T, key string) T {
-	var res T
-	for _, row := range table {
-		return row
+func searchData[T any](path string, fieldName string, targetValue string) ([]T, []string, error) {
+	var response []T
+	var keys []string
+	var jsonData, err = loadJson[T](path)
+
+	if err != nil {
+		return response, keys, err
 	}
 
-	return res
+	for key, row := range jsonData {
+		var refl = reflect.ValueOf(row)
+		if refl.Kind() == reflect.Struct {
+			var field = refl.FieldByName(fieldName)
+			if field.IsValid() {
+				var value = field.Interface()
+				if fmt.Sprint(value) == fmt.Sprint(targetValue) {
+					response = append(response, row)
+					keys = append(keys, key)
+				}
+			}
+		}
+	}
+
+	return response, keys, nil
+
+}
+
+func deleteRow[T any](path string, fieldName string, targetValue string) error {
+	var _, keys, err = searchData[T](path, fieldName, targetValue)
+	var table, err2 = loadJson[T](path)
+	if err != nil {
+		return err
+	}
+
+	if err2 != nil {
+		return err2
+	}
+
+	for _, key := range keys {
+		delete(table, key)
+	}
+
+	writeToJson(path, table)
+
+	return nil
 }

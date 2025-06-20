@@ -22,16 +22,12 @@ type User struct {
 	Age  int    `json:"age"`
 }
 ```
-```
-```
 
 After creating the struct, we use it in creating our database
 ```go 
 var db = Jstow[User]("users.json")
 ```
-``` 
 
-```
 
 This will locate a users.json file or create one if it doesen't already exist while keeping **name** and **age** as the columns.
 
@@ -57,7 +53,44 @@ func main(){
 }
 ``` 
 
+
+### All important methods 
+- All 
+Use this to get the entire table in the form of a map
+```go 
+allData := db.All()
+``` 
+
+- Insert
+This inserts a new row at the bottom of the table
+```go 
+user = User{...}
+err := db.Insert(user)
+``` 
+
+- Search 
+This method takes an unconventional approach and instead treats the columns like strings, see the example below
+```go 
+users, err := db.Search("Name", "John") // this finds and returns any row that matches 'John' under the column 'Name'
+``` 
+Note: Search returns a list so in this case it returns []User and so you'd need to loop through it to access its contents.
+
+
+- Update 
+The update method is slightly more complex than what we've been doing so far, it requires the Search method to work properly.
+You'd need to search for the rows you want to change, loop through them, update the changes and then update them
+```go
+	users, _ := db.Search("Name", "John") // search returns a list of users
+	for _, user := range users {
+		user.Age = 17 // update every user's age
+		db.Update("Name", "John", user) // update every user
+	}
+  ```
+
+- Delete
+This deletes everything that fits a specific requirement (similar to search), in the example below, any row with the name John will be deleted.
+```go
+err := db.Delete("Name", "John")
 ```
-```
-```
-```
+
+
