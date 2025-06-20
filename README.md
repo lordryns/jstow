@@ -1,43 +1,55 @@
-# Jstow 
+# Jstow
 
-Jstow brings the functionality of SQL to JSON, in essence, Jstow allows you to store data in a Row/Column format in a JSON file as opposed to the traditional Key, Value pair method you may be familiar with.
+Jstow brings the functionality of SQL to JSON. In essence, Jstow allows you to store data in a **row/column** format within a JSON file, as opposed to the traditional **key-value** pair method you may be familiar with.
 
-To get started, Run 
+---
 
-```bash 
+##  Getting Started
+
+To get started, run:
+
+```bash
 go get github.com/lordryns/jstow
-``` 
+```
 
-After everything is installed, you can go straight to using it in your project.
+After installation, you can start using it in your project right away.
 
-Before getting started with Jstow, it is important to understand its design principles.
+---
 
-- Every file is a table
-- Values must be consistent hence the usage of structs
+##  Design Principles
 
-Every file is a table, and we define to a struct to control the row/column behaviour of the table eg 
-```go 
+Before using Jstow, it's important to understand its design principles:
+
+- Every file is a **table**.
+- Values must be consistent — hence the usage of **structs**.
+
+Each file is treated as a table, and you define a struct to control the row/column behavior. For example:
+
+```go
 type User struct {
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
 ```
 
-After creating the struct, we use it in creating our database
-```go 
+Then you use this struct to create your database:
+
+```go
 var db = Jstow[User]("users.json")
 ```
 
+This will locate a `users.json` file or create one if it doesn't already exist, while keeping **name** and **age** as the columns.
 
-This will locate a users.json file or create one if it doesen't already exist while keeping **name** and **age** as the columns.
+---
 
-Below is a full example:
+##  Full Example
 
-```go 
-package main 
+```go
+package main
+
 import (
-  "fmt"
-  "github.com/lordryns/jstow"
+	"fmt"
+	"github.com/lordryns/jstow"
 )
 
 type User struct {
@@ -45,52 +57,63 @@ type User struct {
 	Age  int    `json:"age"`
 }
 
-func main(){
-  var db = Jstow[User]("users.json")
-  var values = db.All() // use to get the entire table
+func main() {
+	var db = Jstow[User]("users.json")
+	var values = db.All() // Use to get the entire table
 	fmt.Println(values)
-
 }
-``` 
-
-
-### All important methods 
-- All 
-Use this to get the entire table in the form of a map
-```go 
-allData := db.All()
-``` 
-
-- Insert
-This inserts a new row at the bottom of the table
-```go 
-user = User{...}
-err := db.Insert(user)
-``` 
-
-- Search 
-This method takes an unconventional approach and instead treats the columns like strings, see the example below
-```go 
-users, err := db.Search("Name", "John") // this finds and returns any row that matches 'John' under the column 'Name'
-``` 
-Note: Search returns a list so in this case it returns []User and so you'd need to loop through it to access its contents.
-
-
-- Update 
-The update method is slightly more complex than what we've been doing so far, it requires the Search method to work properly.
-You'd need to search for the rows you want to change, loop through them, update the changes and then update them
-```go
-	users, _ := db.Search("Name", "John") // search returns a list of users
-	for _, user := range users {
-		user.Age = 17 // update every user's age
-		db.Update("Name", "John", user) // update every user
-	}
-  ```
-
-- Delete
-This deletes everything that fits a specific requirement (similar to search), in the example below, any row with the name John will be deleted.
-```go
-err := db.Delete("Name", "John")
 ```
 
+---
 
+##  Core Methods
+
+### `All`
+Retrieves the entire table as a map.
+
+```go
+allData := db.All()
+```
+
+---
+
+### `Insert`
+Inserts a new row at the bottom of the table.
+
+```go
+user := User{...}
+err := db.Insert(user)
+```
+
+---
+
+### `Search`
+Search takes an unconventional approach — it treats the columns like strings:
+
+```go
+users, err := db.Search("Name", "John") // Returns any row that matches 'John' under the column 'Name'
+```
+
+**Note:** `Search` returns a slice (e.g. `[]User`), so you'll need to loop through it to access its contents.
+
+---
+
+### `Update`
+Update works in conjunction with `Search`. You first search for the rows, modify them, and then call `Update`.
+
+```go
+users, _ := db.Search("Name", "John") // Search returns a list of users
+for _, user := range users {
+	user.Age = 17                     // Update each user's age
+	db.Update("Name", "John", user)   // Apply the update
+}
+```
+
+---
+
+### `Delete`
+Deletes all rows that match a specific condition — similar to `Search`.
+
+```go
+err := db.Delete("Name", "John") // Deletes any row with the name 'John'
+```
