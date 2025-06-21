@@ -9,7 +9,7 @@ Jstow brings the functionality of SQL to JSON. In essence, Jstow allows you to s
 To get started, run:
 
 ```bash
-go get github.com/lordryns/jstow
+go get github.com/lordryns/jstow@v0.1.1
 ```
 
 After installation, you can start using it in your project right away.
