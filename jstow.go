@@ -16,22 +16,27 @@ type JstowBase[T any] struct {
 	Body map[string]T
 }
 
-func Jstow[T any](path string) *JstowBase[T] {
+func Jstow[T any](path string) (*JstowBase[T], error) {
 	// the underscore is for the error
 	// no error handling yet, add later
 	var payload, err = loadJson[T](path)
 	if err != nil {
-		file, err := os.Create(path)
-		if err != nil {
-			fmt.Println("Unable to create file!")
+		if errors.Is(err, os.ErrNotExist) {
+			file, err2 := os.Create(path)
+			if err2 != nil {
+				err = err2
+			} else {
+				file.WriteString("{}")
+				defer file.Close()
+				err = nil
+
+			}
+
 		}
 
-		file.WriteString("{}")
-
-		defer file.Close()
 	}
 
-	return &JstowBase[T]{Path: path, Body: payload}
+	return &JstowBase[T]{Path: path, Body: payload}, err
 }
 
 // this function is simply for elegantly retuning every value there

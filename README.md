@@ -52,13 +52,18 @@ import (
 	"github.com/lordryns/jstow"
 )
 
+// json rename is optional as usual
 type User struct {
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
 
 func main() {
-	var db = Jstow[User]("users.json")
+	var db, err = Jstow[User]("users.json")
+  if err != nil {
+    fmt.Println(err) // incase something breaks
+    return
+  }
 	var values = db.All() // Use to get the entire table
 	fmt.Println(values)
 }
@@ -117,3 +122,16 @@ Deletes all rows that match a specific condition — similar to `Search`.
 ```go
 err := db.Delete("Name", "John") // Deletes any row with the name 'John'
 ```
+
+
+## Conclusion 
+
+Please note that this is simply the initial build and should not be used in production.
+
+Currently being maintained by [@lordryns](https://github.com/lordryns) 
+Different ways to contribute 
+- Send a pull request 
+- Message me on social media (X and Discord are the same username as Github).
+- open an issue 
+
+i promise to be active, many thanks (please give us a star)

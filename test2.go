@@ -9,7 +9,7 @@ type User2 struct {
 }
 
 func test() {
-	var db = Jstow[User2]("db.json")
+	var db, _ = Jstow[User2]("db.json")
 
 	users, _ := db.Search("Name", "Jason")
 	for _, user := range users {
