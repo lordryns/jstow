@@ -59,7 +59,7 @@ type User struct {
 }
 
 func main() {
-	var db, err = Jstow[User]("users.json")
+  var db, err = Jstow[User]("users.json")
   if err != nil {
     fmt.Println(err) // incase something breaks
     return
