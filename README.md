@@ -35,7 +35,7 @@ type User struct {
 Then you use this struct to create your database:
 
 ```go
-var db = Jstow[User]("users.json")
+var db, err = Jstow[User]("users.json")
 ```
 
 This will locate a `users.json` file or create one if it doesn't already exist, while keeping **name** and **age** as the columns.
